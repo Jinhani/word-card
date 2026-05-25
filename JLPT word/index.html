@@ -10,30 +10,61 @@
 
         <input id="word-input" placeholder="단어를 입력하세요" />
         <button id="word-button">추가</button>
+
         <input id="search-input" placeholder="찾을 단어를 입력하세요" />
         <button id="search-button">검색</button>
 
-        <ul>
-            <li>
-                <span>勉強(べんきょう) - 공부</span>
-                <span>sp言葉(ことば) - 단어, 말</span>
-            </li>
-        </ul>
+        <ul></ul>
 
         <script>
+            // localStorage에 저장된 단어가 없을 때 처음 보여줄 기본 단어 목록
+            // 단어 하나는 문자열이 아니라 { text, memorized } 형태의 객체로 관리한다.
+            const defaultWords = [
+                { text: "勉強(べんきょう) - 공부", memorized: false },
+                { text: "言葉(ことば) - 단어, 말", memorized: false },
+            ];
+
+            // 화면에서 필요한 요소들을 id 또는 태그 이름으로 찾는다.
             const wordList = document.querySelector("ul");
             const wordInput = document.querySelector("#word-input");
             const wordButton = document.querySelector("#word-button");
-            const searchButton = document.querySelector("#search-button");
             const searchInput = document.querySelector("#search-input");
+            const searchButton = document.querySelector("#search-button");
 
-            function addEditButton(li) {
+            // 단어 카드에 외움/미외움 버튼을 붙이는 함수
+            function addMemorizedButton(card, wordData) {
+                const memorizedButton = document.createElement("button");
+                memorizedButton.className = "memorized-button";
+
+                if (wordData.memorized) {
+                    memorizedButton.textContent = "외움";
+                } else {
+                    memorizedButton.textContent = "미외움";
+                }
+
+                memorizedButton.addEventListener("click", function () {
+                    wordData.memorized = !wordData.memorized;
+
+                    if (wordData.memorized) {
+                        memorizedButton.textContent = "외움";
+                    } else {
+                        memorizedButton.textContent = "미외움";
+                    }
+
+                    saveWords();
+                });
+
+                card.appendChild(memorizedButton);
+            }
+
+            // 단어 카드에 수정 버튼을 붙이는 함수
+            function addEditButton(card) {
                 const editButton = document.createElement("button");
                 editButton.textContent = "수정";
 
                 editButton.addEventListener("click", function () {
-                    const span = li.querySelector("span");
-                    const currentWord = span.textContent;
+                    const wordSpan = card.querySelector("span");
+                    const currentWord = wordSpan.textContent;
 
                     const newWord = prompt("수정할 단어를 입력하세요", currentWord);
 
@@ -46,54 +77,60 @@
                         return;
                     }
 
-                    span.textContent = newWord.trim();
+                    wordSpan.textContent = newWord.trim();
 
                     saveWords();
                 });
 
-                li.appendChild(editButton);
+                card.appendChild(editButton);
             }
 
-            // li 하나를 받아서 삭제 버튼을 붙여주는 함수
-
-            function addDeleteButton(li) {
+            // 단어 카드에 삭제 버튼을 붙이는 함수
+            function addDeleteButton(card) {
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "삭제";
 
                 deleteButton.addEventListener("click", function () {
-                    li.remove();
-                    saveWords(); // 삭제 후 현재 목록을 다시 저장
+                    card.remove();
+
+                    saveWords();
                 });
 
-                li.appendChild(deleteButton);
+                card.appendChild(deleteButton);
             }
 
-            // 단어 하나를 받아서 li를 만들고 화면에 추가하는 함수
-            function createWordItem(word) {
-                const li = document.createElement("li");
+            // 단어 객체 하나를 받아서 화면에 카드 li를 만드는 함수
+            function createWordCard(wordData) {
+                const card = document.createElement("li");
 
-                const span = document.createElement("span");
-                span.textContent = word;
+                const wordSpan = document.createElement("span");
+                wordSpan.textContent = wordData.text;
 
-                li.appendChild(span);
+                card.appendChild(wordSpan);
 
-                addEditButton(li);
-                addDeleteButton(li);
+                addMemorizedButton(card, wordData);
+                addEditButton(card);
+                addDeleteButton(card);
 
-                wordList.appendChild(li);
+                wordList.appendChild(card);
             }
 
-            // 현재 화면에 있는 li들의 단어만 모아서 localStorage에 저장하는 함수
+            // 현재 화면에 있는 단어 카드들을 객체 배열로 만들어 localStorage에 저장한다.
             function saveWords() {
                 const words = [];
 
-                const items = document.querySelectorAll("li");
+                const cards = document.querySelectorAll("li");
 
-                items.forEach(function (li) {
-                    // li 안에는 "단어 텍스트 + 삭제 버튼"이 같이 있음
-                    // 그래서 첫 번째 자식 노드의 텍스트만 가져옴
-                    const word = li.querySelector("span").textContent.trim();
-                    words.push(word);
+                cards.forEach(function (card) {
+                    const wordText = card.querySelector("span").textContent.trim();
+
+                    const memorizedButton = card.querySelector(".memorized-button");
+                    const isMemorized = memorizedButton.textContent === "외움";
+
+                    words.push({
+                        text: wordText,
+                        memorized: isMemorized,
+                    });
                 });
 
                 console.log(words);
@@ -101,87 +138,56 @@
                 localStorage.setItem("words", JSON.stringify(words));
             }
 
-            // localStorage에 저장된 단어들을 가져옴
+            // localStorage는 문자열만 저장하므로 JSON.parse로 다시 객체 배열로 되돌린다.
             const savedWords = JSON.parse(localStorage.getItem("words"));
 
-            if (savedWords) {
-                // 저장된 단어가 있으면, 기존 ul 내용을 비움
-                wordList.innerHTML = "";
+            // 저장된 단어가 있으면 savedWords를 사용하고, 없으면 defaultWords를 사용한다.
+            const initialWords = savedWords || defaultWords;
 
-                // 저장된 단어 배열을 기준으로 li를 다시 만듦
-                savedWords.forEach(function (word) {
-                    createWordItem(word);
-                });
-            } else {
-                // 저장된 단어가 없으면, 기존 HTML에 있던 li들에 삭제 버튼만 붙임
-                const existingWords = document.querySelectorAll("li");
+            // 초기 단어 데이터를 기준으로 화면에 카드들을 만든다.
+            initialWords.forEach(function (wordData) {
+                createWordCard(wordData);
+            });
 
-                existingWords.forEach(function (li) {
-                    addDeleteButton(li);
-                });
-            }
-
+            // 추가 버튼을 누르면 새 단어 객체를 만들고 화면과 localStorage에 반영한다.
             wordButton.addEventListener("click", function () {
-                const word = wordInput.value.trim();
+                const wordText = wordInput.value.trim();
 
-                if (word === "") {
+                if (wordText === "") {
                     alert("단어를 입력해주세요");
                     return;
                 }
 
-                createWordItem(word);
+                const wordData = {
+                    text: wordText,
+                    memorized: false,
+                };
 
-                saveWords(); // 추가 후 현재 목록을 저장
+                createWordCard(wordData);
+
+                saveWords();
 
                 wordInput.value = "";
             });
+
+            // 검색 버튼을 누르면 단어 텍스트에 검색어가 포함된 카드만 보여준다.
             function searchWords() {
                 const keyword = searchInput.value.trim();
 
-                const items = document.querySelectorAll("li");
+                const cards = document.querySelectorAll("li");
 
-                items.forEach(function (li) {
-                    const itemText = li.querySelector("span").textContent.trim();
+                cards.forEach(function (card) {
+                    const cardText = card.querySelector("span").textContent.trim();
 
-                    if (itemText.includes(keyword)) {
-                        li.style.display = "";
+                    if (cardText.includes(keyword)) {
+                        card.style.display = "";
                     } else {
-                        li.style.display = "none";
+                        card.style.display = "none";
                     }
                 });
             }
-
-            // searchInput.addEventListener("input", function () {
-            //     const keyword = searchInput.value.trim();
-
-            //     const items = document.querySelectorAll("li");
-
-            //     items.forEach(function (li) {
-            //         const word = li.firstChild.textContent.trim();
-
-            //         if (word.includes(keyword)) {
-            //             li.style.display = "";
-            //         } else {
-            //             li.style.display = "none";
-            //         }
-            //     });
-            // }); => 검색을 누르지 않아도 나오게 하는 검색방법
 
             searchButton.addEventListener("click", searchWords);
         </script>
     </body>
 </html>
-
-<!-- /1. 변수 이름 오타/역할 정리
-2. 중복되는 li 생성 로직 함수화
-3. 검색 기능도 함수로 유지
-4. 저장/불러오기 흐름 명확히 정리
-5. 그다음 수정 기능 또는 React 전환 -->
-
-<!-- 
-li 안의 단어 텍스트와 버튼을 분리하기 위해 span을 사용했다(텍스트와 버튼이 섞이면 저장/검색/수정이 불안정해지기 때문에)
-추가/수정 삭제 후 saveWord()를 호출해서 새로고침등을 해도 남아있을 수 있도록 로컬스토리지에 현재 목록을 저장했다
-input과 button이 여러 개여서 id 선택자로 요소를 찾는것에 집중했다. -->
-<!-- memorized는 메서드가 아니라 객체의 속성이다.
- 단어 텍스트뿐 아니라 외움 상태까지 저장하려고 문자열 배열을 객체 배열로 바꾼다.
- 예: { text: "勉強(べんきょう) - 공부", memorized: false } -->
