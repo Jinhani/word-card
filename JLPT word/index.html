@@ -14,6 +14,11 @@
         <input id="search-input" placeholder="찾을 단어를 입력하세요" />
         <button id="search-button">검색</button>
 
+        <div>
+            <button id="all-button">전체</button>
+            <button id="memorized-button">외움</button>
+            <button id="unmemorized-button">미외움</button>
+        </div>
         <ul></ul>
 
         <script>
@@ -30,6 +35,10 @@
             const wordButton = document.querySelector("#word-button");
             const searchInput = document.querySelector("#search-input");
             const searchButton = document.querySelector("#search-button");
+
+            const allButton = document.querySelector("#all-button");
+            const memorizedFilterButton = document.querySelector("#memorized-button");
+            const unmemorizedFilterButton = document.querySelector("#unmemorized-button");
 
             // 단어 카드에 외움/미외움 버튼을 붙이는 함수
             function addMemorizedButton(card, wordData) {
@@ -187,7 +196,43 @@
                 });
             }
 
+            function filterWords(filterType) {
+                const cards = document.querySelectorAll("li");
+
+                cards.forEach(function (card) {
+                    const memorizedButton = card.querySelector(".memorized-button");
+                    const isMemorized = memorizedButton.textContent === "외움";
+
+                    if (filterType === "all") {
+                        card.style.display = "";
+                        return;
+                    }
+
+                    if (filterType === "memorized" && isMemorized) {
+                        card.style.display = "";
+                        return;
+                    }
+
+                    if (filterType === "unmemorized" && !isMemorized) {
+                        card.style.display = "";
+                        return;
+                    }
+
+                    card.style.display = "none";
+                });
+            }
             searchButton.addEventListener("click", searchWords);
+            allButton.addEventListener("click", function () {
+                filterWords("all");
+            });
+
+            memorizedFilterButton.addEventListener("click", function () {
+                filterWords("memorized");
+            });
+
+            unmemorizedFilterButton.addEventListener("click", function () {
+                filterWords("unmemorized");
+            });
         </script>
     </body>
 </html>
