@@ -10,6 +10,8 @@ type Word = {
 function App() {
     const [wordText, setWordText] = useState("");
     const [words, setWords] = useState<Word[]>([]);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editText, setEditText] = useSteate("");
 
     function handleAddWord() {
         const trimmedWord = wordText.trim();
@@ -58,33 +60,10 @@ function App() {
         setWords(nextWords);
     }
 
-    function handleEditWord(editId: number, currentText: string) {
-        console.log("수정 버튼 클릭됨", editId, currentText);
-        const newText = prompt("수정할 단어를 입력하세요", currentText);
-
-        if (newText === null) {
-            return;
-        }
-
-        const trimmedText = newText.trim();
-
-        if (trimmedText === "") {
-            alert("단어를 입력해주세요");
-            return;
-        }
-
-        const nextWords = words.map((word) => {
-            if (word.id === editId) {
-                return {
-                    ...word,
-                    text: trimmedText,
-                };
-            }
-
-            return word;
-        });
-
-        setWords(nextWords);
+    // id가 같은 word를 찾아서 editingId에 저장, editText에는 word.text 저장
+    function handleEditWord(word: Word) {
+        setEditingId(word.id);
+        setEditText(word.text);
     }
 
     return (
@@ -122,7 +101,7 @@ function App() {
 
                         <button
                             onClick={() => {
-                                handleEditWord(word.id, word.text);
+                                handleEditWord(word);
                             }}
                         >
                             수정
