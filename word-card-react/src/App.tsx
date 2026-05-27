@@ -6,6 +6,7 @@ type Word = {
     text: string;
     memorized: boolean;
 };
+
 function App() {
     const [wordText, setWordText] = useState("");
     const [words, setWords] = useState<Word[]>([]);
@@ -25,11 +26,12 @@ function App() {
         };
 
         console.log("추가할 단어:", newWord);
+
         setWords([...words, newWord]);
         setWordText("");
     }
-    //UI에서 막았다고 해서 로직 검사를 없애면 안된다
 
+    // UI에서 막았다고 해서 로직 검사를 없애면 안 된다
     function handleDeleteWord(deleteId: number) {
         const nextWords = words.filter((word) => {
             return word.id !== deleteId;
@@ -55,6 +57,36 @@ function App() {
 
         setWords(nextWords);
     }
+
+    function handleEditWord(editId: number, currentText: string) {
+        console.log("수정 버튼 클릭됨", editId, currentText);
+        const newText = prompt("수정할 단어를 입력하세요", currentText);
+
+        if (newText === null) {
+            return;
+        }
+
+        const trimmedText = newText.trim();
+
+        if (trimmedText === "") {
+            alert("단어를 입력해주세요");
+            return;
+        }
+
+        const nextWords = words.map((word) => {
+            if (word.id === editId) {
+                return {
+                    ...word,
+                    text: trimmedText,
+                };
+            }
+
+            return word;
+        });
+
+        setWords(nextWords);
+    }
+
     return (
         <div>
             <h1>일본어 단어 카드</h1>
@@ -70,16 +102,32 @@ function App() {
             <button onClick={handleAddWord} disabled={wordText.trim() === ""}>
                 추가
             </button>
-            <p>현재 입력값: {wordText} </p>
+
+            <p>현재 입력값: {wordText}</p>
             <p>글자 수: {wordText.length}</p>
             <p>저장될 값: {wordText.trim()}</p>
+
             <ul>
                 {words.map((word) => (
                     <li key={word.id}>
                         {word.text}
-                        <button onClick={() => handleToggleMemorized(word.id)}>
+
+                        <button
+                            onClick={() => {
+                                handleToggleMemorized(word.id);
+                            }}
+                        >
                             {word.memorized ? "외움" : "외우지 못함"}
                         </button>
+
+                        <button
+                            onClick={() => {
+                                handleEditWord(word.id, word.text);
+                            }}
+                        >
+                            수정
+                        </button>
+
                         <button
                             onClick={() => {
                                 handleDeleteWord(word.id);
@@ -90,6 +138,7 @@ function App() {
                     </li>
                 ))}
             </ul>
+
             {/* {wordText.trim() === "" && <p>단어를 입력해주세요.</p>} */}
             {/* <button disabled={wordText.trim() === ""}>추가</button> */}
         </div>
