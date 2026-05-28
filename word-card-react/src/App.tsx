@@ -11,7 +11,7 @@ function App() {
     const [wordText, setWordText] = useState("");
     const [words, setWords] = useState<Word[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editText, setEditText] = useSteate("");
+    const [editText, setEditText] = useState("");
 
     function handleAddWord() {
         const trimmedWord = wordText.trim();
@@ -65,6 +65,29 @@ function App() {
         setEditingId(word.id);
         setEditText(word.text);
     }
+    function handleSaveEdit(editId: number) {
+        const trimmedText = editText.trim();
+
+        if (trimmedText === "") {
+            alert("단어를 입력해주세요");
+            return;
+        }
+
+        const nextWords = words.map((word) => {
+            if (word.id === editId) {
+                return {
+                    ...word,
+                    text: trimmedText,
+                };
+            }
+
+            return word;
+        });
+
+        setWords(nextWords);
+        setEditingId(null);
+        setEditText("");
+    }
 
     return (
         <div>
@@ -89,35 +112,55 @@ function App() {
             <ul>
                 {words.map((word) => (
                     <li key={word.id}>
-                        {word.text}
+                        {editingId === word.id ? (
+                            <>
+                                <input
+                                    value={editText}
+                                    onChange={(e) => {
+                                        setEditText(e.target.value);
+                                    }}
+                                />
 
-                        <button
-                            onClick={() => {
-                                handleToggleMemorized(word.id);
-                            }}
-                        >
-                            {word.memorized ? "외움" : "외우지 못함"}
-                        </button>
+                                <button
+                                    onClick={() => {
+                                        handleSaveEdit(word.id);
+                                    }}
+                                >
+                                    저장
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                {word.text}
 
-                        <button
-                            onClick={() => {
-                                handleEditWord(word);
-                            }}
-                        >
-                            수정
-                        </button>
+                                <button
+                                    onClick={() => {
+                                        handleToggleMemorized(word.id);
+                                    }}
+                                >
+                                    {word.memorized ? "외움" : "외우지 못함"}
+                                </button>
 
-                        <button
-                            onClick={() => {
-                                handleDeleteWord(word.id);
-                            }}
-                        >
-                            삭제
-                        </button>
+                                <button
+                                    onClick={() => {
+                                        handleEditWord(word);
+                                    }}
+                                >
+                                    수정
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        handleDeleteWord(word.id);
+                                    }}
+                                >
+                                    삭제
+                                </button>
+                            </>
+                        )}
                     </li>
                 ))}
             </ul>
-
             {/* {wordText.trim() === "" && <p>단어를 입력해주세요.</p>} */}
             {/* <button disabled={wordText.trim() === ""}>추가</button> */}
         </div>
