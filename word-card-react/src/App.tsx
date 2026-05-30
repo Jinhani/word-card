@@ -65,6 +65,7 @@ function App() {
         setEditingId(word.id);
         setEditText(word.text);
     }
+
     function handleSaveEdit(editId: number) {
         const trimmedText = editText.trim();
 
@@ -85,6 +86,11 @@ function App() {
         });
 
         setWords(nextWords);
+        setEditingId(null);
+        setEditText("");
+    }
+
+    function handleCancelEdit() {
         setEditingId(null);
         setEditText("");
     }
@@ -128,6 +134,8 @@ function App() {
                                 >
                                     저장
                                 </button>
+
+                                <button onClick={handleCancelEdit}>취소</button>
                             </>
                         ) : (
                             <>
@@ -161,6 +169,7 @@ function App() {
                     </li>
                 ))}
             </ul>
+
             {/* {wordText.trim() === "" && <p>단어를 입력해주세요.</p>} */}
             {/* <button disabled={wordText.trim() === ""}>추가</button> */}
         </div>
